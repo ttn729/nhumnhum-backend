@@ -9,7 +9,33 @@ router = APIRouter()
 @router.post("/questions/", response_model=QuestionModel)
 def create_question(question_data: dict):
     db: Session = SessionLocal()
-    db_question = Question(collection=question_data['collection'], prompt=question_data['prompt'], type=question_data['type'])
+
+    validTypes = ["MC", "SA", "Rearrange", "Prompt"]
+
+    if question_data['type'] not in validTypes:
+        raise HTTPException(status_code=404, detail="Not a valid question type")
+
+
+    elif question_data['type'] == "MC":
+        db_question = Question(collection=question_data['collection'], 
+                           question=question_data['question'], 
+                           type=question_data['type'],
+                           op1=question_data['op1'],
+                           op2=question_data['op2'],
+                           op3=question_data['op3'],
+                           op4=question_data['op4'],
+                           answer=question_data['answer'])
+    elif question_data['type'] == "SA" or question_data['type'] == "Rearrange":
+        db_question = Question(collection=question_data['collection'], 
+                    question=question_data['question'], 
+                    type=question_data['type'],
+                    answer=question_data['answer'])
+    elif question_data['type'] == "Prompt":
+        db_question = Question(collection=question_data['collection'], 
+            question=question_data['question'], 
+            type=question_data['type'],
+            prompt=question_data['prompt'],
+            answer=question_data['answer'])
     db.add(db_question)
     db.commit()
     db.refresh(db_question)
@@ -40,8 +66,15 @@ def update_question(question_id: int, question_data: dict):
     db_question = db.query(Question).filter(Question.id == question_data['id']).first()
     if db_question is None:
         raise HTTPException(status_code=404, detail="Question not found")
+    
+    db_question.question = question_data['question']
     db_question.prompt = question_data['prompt']
-    db_question.type = question_data['type']
+    db_question.op1 = question_data['op1']
+    db_question.op2 = question_data['op2']
+    db_question.op3 = question_data['op3']
+    db_question.op4 = question_data['op4']
+    db_question.answer = question_data['answer']
+
     db.commit()
     db.refresh(db_question)
     return db_question
