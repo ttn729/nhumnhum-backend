@@ -96,7 +96,7 @@ def update_question(question_id: int, question_data: dict):
 
 # Delete an question
 @router.delete("/questions/{question_id}")
-def delete_question(question_id: int):
+async def delete_question(question_id: int):
     db: Session = SessionLocal()
     question = db.query(Question).filter(Question.id == question_id).first()
     if question is None:
@@ -104,3 +104,18 @@ def delete_question(question_id: int):
     db.delete(question)
     db.commit()
     return {"message": "question deleted"}
+
+# Delete collection
+@router.delete("/bulkDelete/{collection_name}")
+def delete_collection(collection_name: str):
+    db: Session = SessionLocal()
+    questions = db.query(Question).filter(Question.collection == collection_name).all()
+
+    if len(questions) == 0:
+        raise HTTPException(status_code=404, detail=f"No questions found for collection: {collection_name}")
+
+    for question in questions:
+        db.delete(question)
+    
+    db.commit()
+    return {"message": f"All questions for collection '{collection_name}' deleted"}
