@@ -3,11 +3,25 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, Question
 from models import QuestionModel
 
+from typing import List
+
 router = APIRouter()
+
+# Bulk add questions
+@router.post("/bulkAdd/", response_model=str)
+async def create_questions(question_data: List[dict]):
+
+    db: Session = SessionLocal()
+
+    for question in question_data:
+        await create_question(question)
+        
+    db.commit()
+    return "Bulk Questions added successfully"
 
 # Create a new question
 @router.post("/questions/", response_model=QuestionModel)
-def create_question(question_data: dict):
+async def create_question(question_data: dict):
     db: Session = SessionLocal()
 
     validTypes = ["MC", "SA", "Rearrange", "Prompt"]
