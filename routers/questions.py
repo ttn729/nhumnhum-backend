@@ -73,6 +73,23 @@ def read_question(question_id: int):
     return question
 
 
+# Update collection
+@router.put("/questions/{collection_name}/{new_collection_name}", response_model=str)
+def update_collection(collection_name: str, new_collection_name: str):
+    db: Session = SessionLocal()
+    questions = db.query(Question).filter(Question.collection == collection_name).all()
+
+    if len(questions) == 0:
+        raise HTTPException(status_code=404, detail=f"No questions found for collection: {collection_name}")
+    
+    for question in questions:
+        question.collection = new_collection_name
+    
+    db.commit()
+
+    return "We did it Alexa"
+
+
 # Update a question
 @router.put("/questions/{question_id}", response_model=QuestionModel)
 def update_question(question_id: int, question_data: dict):
